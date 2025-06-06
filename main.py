@@ -46,12 +46,20 @@ user_input = st.text_input("You:", placeholder="What’s the point of anything, 
 ask_clicked = st.button("🔄 Ask Marvin")
 
 if ask_clicked and user_input:
-    response = chain.invoke(
-        {"messages": [HumanMessage(content=user_input)]},
-        config={"configurable": {"session_id": "marvin-session"}},
-    )
-    st.session_state.chat_log.append(("You", user_input))
-    st.session_state.chat_log.append(("Marvin", response.content))
+    try:
+        response = chain.invoke(
+            {"messages": [HumanMessage(content=user_input)]},
+            config={"configurable": {"session_id": "marvin-session"}},
+        )
+        
+        if response and response.content:
+            st.session_state.chat_log.append(("You", user_input))
+            st.session_state.chat_log.append(("Marvin", response.content))
+        else:
+            st.session_state.chat_log.append(("You", user_input))
+            st.session_state.chat_log.append(("Marvin", "Oh, I guess nothing really matters."))
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
 
 if st.session_state.chat_log:
     st.markdown("---")
