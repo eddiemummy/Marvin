@@ -43,9 +43,8 @@ if "chat_log" not in st.session_state:
     st.session_state.chat_log = []
 
 user_input = st.text_input("You:", placeholder="What’s the point of anything, Marvin?")
-ask_clicked = st.button("🔄 Ask Marvin")
 
-if ask_clicked and user_input:
+if user_input:
     response = chain.invoke(
         {"messages": [HumanMessage(content=user_input)]},
         config={"configurable": {"session_id": "marvin-session"}},
