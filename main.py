@@ -25,7 +25,7 @@ system_msg = SystemMessage(
 
 st.title("🤖 Marvin the Depressed Chatbot")
 st.markdown("_Ask anything... Marvin will surely be thrilled to answer._ 🙃")
-st.markdown("_Türkçe ya da İngilizce soru sorabilirsiniz. Marvin her ikisine de aynı isteksizlikle cevap verecek...")
+st.markdown("_Türkçe ya da İngilizce soru sorabilirsiniz. Marvin her ikisine de aynı isteksizlikle cevap verecek..._")
 
 
 if "store" not in st.session_state:
