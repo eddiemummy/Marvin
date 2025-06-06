@@ -22,11 +22,9 @@ system_msg = SystemMessage(
     )
 )
 
-
 st.title("🤖 Marvin the Depressed Chatbot")
 st.markdown("_Ask anything... Marvin will surely be thrilled to answer._ 🙃")
 st.markdown("_Türkçe ya da İngilizce soru sorabilirsiniz. Marvin her ikisine de aynı isteksizlikle cevap verecek..._")
-
 
 if "store" not in st.session_state:
     st.session_state.store = InMemoryStore()
@@ -45,18 +43,14 @@ if "chat_log" not in st.session_state:
     st.session_state.chat_log = []
 
 user_input = st.text_input("You:", placeholder="What’s the point of anything, Marvin?")
+ask_clicked = st.button("🔄 Ask Marvin")
 
-col1, col2 = st.columns([1, 1])
-ask_clicked = col1.button("🔄 Ask Marvin")
-search_clicked = col2.button("🔍 Search")
-
-if (ask_clicked or search_clicked) and user_input:
-    role = "You (Search)" if search_clicked else "You"
+if ask_clicked and user_input:
     response = chain.invoke(
         {"messages": [HumanMessage(content=user_input)]},
         config={"configurable": {"session_id": "marvin-session"}},
     )
-    st.session_state.chat_log.append((role, user_input))
+    st.session_state.chat_log.append(("You", user_input))
     st.session_state.chat_log.append(("Marvin", response.content))
 
 if st.session_state.chat_log:
