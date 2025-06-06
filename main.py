@@ -32,6 +32,7 @@ if "store" not in st.session_state:
 def get_memory(session_id: str):
     return InMemoryChatMessageHistory()
 
+# This chain will invoke the model and return a response
 chain = RunnableWithMessageHistory(
     RunnableLambda(lambda x: model.invoke(x["messages"])),
     get_session_history=get_memory,
@@ -50,11 +51,8 @@ if ask_clicked and user_input:
         # Construct the message list with the system message and the user input
         messages = [system_msg, HumanMessage(content=user_input)]
 
-        # Pass the message list to the model for generating a response
-        response = chain.invoke(
-            {"messages": messages},
-            config={"configurable": {"session_id": "marvin-session"}},
-        )
+        # Pass the list of messages directly to the model for generating a response
+        response = model.invoke(messages)
 
         if response and response.content:
             st.session_state.chat_log.append(("You", user_input))
