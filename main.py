@@ -47,7 +47,7 @@ user_input = st.text_input("You:", placeholder="What’s the point of anything, 
 
 col1, col2 = st.columns([1, 1])
 ask_clicked = col1.button("🔄 Ask Marvin")
-r
+
 if ask_clicked and user_input:
     role = "You (Search)" if search_clicked else "You"
     response = chain.invoke(
