@@ -1,7 +1,7 @@
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_core.stores import InMemoryHistory
+from langchain_core.stores import InMemoryStore
 from langchain_core.runnables import RunnableWithMessageHistory
 from langchain_core.runnables import RunnableLambda
 
@@ -27,7 +27,7 @@ st.markdown("_Ask anything... Marvin will surely be thrilled to answer._ 🙃")
 if "store" not in st.session_state:
     st.session_state.store = {}
 
-memory = InMemoryHistory()
+memory = InMemoryStore()
 chain = RunnableWithMessageHistory(
     RunnableLambda(lambda x: model.invoke([system_msg, HumanMessage(content=x["input"])])),
     lambda session_id: memory,
