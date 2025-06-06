@@ -38,29 +38,31 @@ chain = RunnableWithMessageHistory(
 )
 
 user_input = st.text_input("You:", placeholder="What’s the point of anything, Marvin?")
-ask_button = st.button("🔄 Ask Marvin")
+col1, col2 = st.columns(2)
+ask_button = col1.button("🔄 Ask Marvin")
+search_button = col2.button("🔍 Search")
 
 # Chat log oluşturulmadıysa başlat
 if "chat_log" not in st.session_state:
     st.session_state.chat_log = []
 
-# Marvin'e sor
-if ask_button and user_input:
+# Marvin'e mesaj gönder (Ask ya da Search fark etmez)
+if (ask_button or search_button) and user_input:
+    prefix = "You (Search)" if search_button else "You"
     response = chain.invoke(
         {"messages": [HumanMessage(content=user_input)]},
         config={"configurable": {"session_id": "marvin-session"}},
     )
-    st.session_state.chat_log.append(("You", user_input))
+    st.session_state.chat_log.append((prefix, user_input))
     st.session_state.chat_log.append(("Marvin", response.content))
 
-# Sohbet geçmişini aşağıda göster
+# Sohbet geçmişini göster
 if st.session_state.chat_log:
     with st.container():
         st.markdown("---")
         st.subheader("📜 Conversation with Marvin")
         for role, message in st.session_state.chat_log:
             st.markdown(f"**{role}:** {message}")
-        # ⬇️ Otomatik olarak en alt satıra odaklanmak için boş kutu ekliyoruz
         st.markdown("<div style='height: 1px;' id='bottom'></div>", unsafe_allow_html=True)
         st.markdown(
             "<script>document.getElementById('bottom').scrollIntoView({ behavior: 'smooth' });</script>",
