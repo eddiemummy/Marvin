@@ -1,7 +1,7 @@
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain.storage import InMemoryStore
+from langchain_core.stores import InMemoryStore
 from langchain_core.runnables import RunnableWithMessageHistory
 from langchain_core.runnables import RunnableLambda
 
