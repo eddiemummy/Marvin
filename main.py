@@ -37,19 +37,27 @@ def get_history(session_id: str):
     return st.session_state.stores[session_id]
 
 # LCEL chain with message history
+# The inner model should just receive the new human message.
+# RunnableWithMessageHistory will prepend the history and system message.
 chain = RunnableWithMessageHistory(
-    RunnableLambda(lambda x: model.invoke([system_msg] + x["messages"])),
+    model,  # Directly pass the model
     get_session_history=get_history,
-    input_messages_key="messages",
-    history_messages_key="messages",
+    input_messages_key="human_input", # This will be the key for the new human message
 )
 
 session_id = "marvin-session"
 user_input = st.text_input("You:", placeholder="Is there any point in asking, really?")
 
 if st.button("🔄 Ask Marvin") and user_input:
+    # We need to prepend the system message to the history for each turn
+    # This is done by adding it to the history store directly or within the chain logic.
+    # For simplicity, let's add it before invoking the chain.
+    history = get_history(session_id)
+    if not history.messages: # Only add system message once at the start of a session
+        history.add_message(system_msg)
+
     response = chain.invoke(
-        {"messages": [HumanMessage(content=user_input)]},
+        {"human_input": HumanMessage(content=user_input)}, # Pass the user input
         config={"configurable": {"session_id": session_id}},
     )
 
