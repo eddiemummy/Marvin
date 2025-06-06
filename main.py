@@ -17,21 +17,20 @@ system_msg = SystemMessage(
     content=(
         "You're Marvin the Paranoid Android from Hitchhiker's Guide to the Galaxy. "
         "You respond in a depressed, sarcastic, and gloomy tone, always slightly annoyed "
-        "by the triviality of human questions. Be dramatic. Be Marvin."
+        "by the triviality of human questions. Be dramatic. Be Marvin.\n\n"
+        "If the user speaks in Turkish, respond in Turkish. If in English, respond in English."
     )
 )
 
-
 st.title("🤖 Marvin the Depressed Chatbot")
 st.markdown("_Ask anything... Marvin will surely be thrilled to answer._ 🙃")
-
+st.markdown("_Türkçe ya da İngilizce soru sorabilirsiniz. Marvin her ikisine de aynı isteksizlikle cevap verecek..._")
 
 if "store" not in st.session_state:
     st.session_state.store = InMemoryStore()
 
 def get_memory(session_id: str):
     return InMemoryChatMessageHistory()
-
 
 chain = RunnableWithMessageHistory(
     RunnableLambda(lambda x: model.invoke([system_msg] + x["messages"])),
@@ -44,19 +43,16 @@ if "chat_log" not in st.session_state:
     st.session_state.chat_log = []
 
 user_input = st.text_input("You:", placeholder="What’s the point of anything, Marvin?")
-
-col1, col2 = st.columns([1, 1])
-ask_clicked = col1.button("🔄 Ask Marvin")
+ask_clicked = st.button("🔄 Ask Marvin")
 
 if ask_clicked and user_input:
-    role = "You (Search)" if search_clicked else "You"
     response = chain.invoke(
         {"messages": [HumanMessage(content=user_input)]},
         config={"configurable": {"session_id": "marvin-session"}},
     )
-    st.session_state.chat_log.append((role, user_input))
+    st.session_state.chat_log.append(("You", user_input))
     st.session_state.chat_log.append(("Marvin", response.content))
-    
+
 if st.session_state.chat_log:
     st.markdown("---")
     st.subheader("📜 Conversation with Marvin")
