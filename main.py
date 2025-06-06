@@ -40,29 +40,28 @@ chain = RunnableWithMessageHistory(
 if "chat_log" not in st.session_state:
     st.session_state.chat_log = []
 
-with st.form("chat_form"):
-    user_input = st.text_input("You:", placeholder="What’s the point of anything, Marvin?")
-    col1, col2 = st.columns(2)
-    ask = col1.form_submit_button("🔄 Ask Marvin")
-    search = col2.form_submit_button("🔍 Search")
+user_input = st.text_input("You:", placeholder="What’s the point of anything, Marvin?")
 
-    if (ask or search) and user_input:
-        prefix = "You (Search)" if search else "You"
-        response = chain.invoke(
-            {"messages": [HumanMessage(content=user_input)]},
-            config={"configurable": {"session_id": "marvin-session"}},
-        )
-        st.session_state.chat_log.append((prefix, user_input))
-        st.session_state.chat_log.append(("Marvin", response.content))
+col1, col2 = st.columns([1, 1])
+ask = col1.button("🔄 Ask Marvin")
+search = col2.button("🔍 Search")
+
+if (ask or search) and user_input:
+    prefix = "You (Search)" if search else "You"
+    response = chain.invoke(
+        {"messages": [HumanMessage(content=user_input)]},
+        config={"configurable": {"session_id": "marvin-session"}},
+    )
+    st.session_state.chat_log.append((prefix, user_input))
+    st.session_state.chat_log.append(("Marvin", response.content))
 
 if st.session_state.chat_log:
-    with st.container():
-        st.markdown("---")
-        st.subheader("📜 Conversation with Marvin")
-        for role, message in st.session_state.chat_log:
-            st.markdown(f"**{role}:** {message}")
-        st.markdown("<div style='height: 1px;' id='bottom'></div>", unsafe_allow_html=True)
-        st.markdown(
-            "<script>document.getElementById('bottom').scrollIntoView({ behavior: 'smooth' });</script>",
-            unsafe_allow_html=True
-        )
+    st.markdown("---")
+    st.subheader("📜 Conversation with Marvin")
+    for role, message in st.session_state.chat_log:
+        st.markdown(f"**{role}:** {message}")
+    st.markdown("<div style='height: 1px;' id='bottom'></div>", unsafe_allow_html=True)
+    st.markdown(
+        "<script>document.getElementById('bottom').scrollIntoView({ behavior: 'smooth' });</script>",
+        unsafe_allow_html=True
+    )
