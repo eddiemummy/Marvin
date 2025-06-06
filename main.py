@@ -33,7 +33,7 @@ def get_memory(session_id: str):
     return InMemoryChatMessageHistory()
 
 chain = RunnableWithMessageHistory(
-    RunnableLambda(lambda x: model.invoke({"messages": [{"role": "system", "content": system_msg.content}] + x["messages"]})),
+    RunnableLambda(lambda x: model.invoke(x["messages"])),
     get_session_history=get_memory,
     input_messages_key="messages",
     history_messages_key="messages",
@@ -47,15 +47,15 @@ ask_clicked = st.button("🔄 Ask Marvin")
 
 if ask_clicked and user_input:
     try:
-        # Ensure that the user input is passed correctly with the proper message format
-        user_message = HumanMessage(content=user_input)
+        # Construct the message list with the system message and the user input
+        messages = [system_msg, HumanMessage(content=user_input)]
 
-        # Passing the user input along with system message in a structured way
+        # Pass the message list to the model for generating a response
         response = chain.invoke(
-            {"messages": [user_message]},
+            {"messages": messages},
             config={"configurable": {"session_id": "marvin-session"}},
         )
-        
+
         if response and response.content:
             st.session_state.chat_log.append(("You", user_input))
             st.session_state.chat_log.append(("Marvin", response.content))
