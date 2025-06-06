@@ -1,20 +1,16 @@
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_core.runnables import RunnableWithMessageHistory, RunnableLambda
-from langchain_core.chat_history import InMemoryChatMessageHistory
 
-# Streamlit Secrets
+
 api_key = st.secrets["GOOGLE_GEMINI_KEY"]
 
-# LLM Model
 model = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash",
+    model="gemini-2.0-pro",
     google_api_key=api_key,
-    temperature=0.7,
+    temperature=0.7
 )
 
-# Marvin System Prompt
 system_msg = SystemMessage(
     content=(
         "You're Marvin the Paranoid Android from Hitchhiker's Guide to the Galaxy. "
@@ -23,51 +19,25 @@ system_msg = SystemMessage(
     )
 )
 
-# Streamlit UI
 st.title("🤖 Marvin the Depressed Chatbot")
 st.markdown("_Ask anything... Marvin will surely be thrilled to answer._ 🙃")
 
-# Message history storage
-if "stores" not in st.session_state:
-    st.session_state.stores = {}
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
-def get_history(session_id: str):
-    if session_id not in st.session_state.stores:
-        st.session_state.stores[session_id] = InMemoryChatMessageHistory()
-    return st.session_state.stores[session_id]
+user_input = st.text_input("You:", placeholder="What’s the point of anything, Marvin?")
 
-# LCEL chain with message history
-# The inner model should just receive the new human message.
-# RunnableWithMessageHistory will prepend the history and system message.
-chain = RunnableWithMessageHistory(
-    model,  # Directly pass the model
-    get_session_history=get_history,
-    input_messages_key="human_input", # This will be the key for the new human message
-)
+if user_input:
+    st.session_state.chat_history.append(HumanMessage(content=user_input))
+    
+    response = model.invoke([system_msg] + st.session_state.chat_history)
 
-session_id = "marvin-session"
-user_input = st.text_input("You:", placeholder="Is there any point in asking, really?")
+    st.session_state.chat_history.append(response)
 
-if st.button("🔄 Ask Marvin") and user_input:
-    # We need to prepend the system message to the history for each turn
-    # This is done by adding it to the history store directly or within the chain logic.
-    # For simplicity, let's add it before invoking the chain.
-    history = get_history(session_id)
-    if not history.messages: # Only add system message once at the start of a session
-        history.add_message(system_msg)
 
-    response = chain.invoke(
-        {"human_input": HumanMessage(content=user_input)}, # Pass the user input
-        config={"configurable": {"session_id": session_id}},
-    )
-
-    if "chat_log" not in st.session_state:
-        st.session_state.chat_log = []
-    st.session_state.chat_log.append(("You", user_input))
-    st.session_state.chat_log.append(("Marvin", response.content))
-
-if "chat_log" in st.session_state:
+if st.session_state.chat_history:
     st.markdown("---")
     st.subheader("📜 Conversation with Marvin")
-    for speaker, message in st.session_state.chat_log:
-        st.markdown(f"**{speaker}:** {message}")
+    for msg in st.session_state.chat_history:
+        role = "You" if isinstance(msg, HumanMessage) else "Marvin"
+        st.markdown(f"**{role}:** {msg.content}")
