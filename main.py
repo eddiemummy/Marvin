@@ -1,7 +1,9 @@
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
-
+from langchain_core.runnables import RunnableWithMessageHistory, RunnableLambda
+from langchain_core.stores import InMemoryStore
+from langchain_core.chat_history import InMemoryChatMessageHistory
 
 api_key = st.secrets["GOOGLE_GEMINI_KEY"]
 
@@ -22,22 +24,45 @@ system_msg = SystemMessage(
 st.title("🤖 Marvin the Depressed Chatbot")
 st.markdown("_Ask anything... Marvin will surely be thrilled to answer._ 🙃")
 
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+if "store" not in st.session_state:
+    st.session_state.store = InMemoryStore()
+
+def get_memory(session_id: str):
+    return InMemoryChatMessageHistory()
+
+chain = RunnableWithMessageHistory(
+    RunnableLambda(lambda x: model.invoke([system_msg] + x["messages"])),
+    get_session_history=get_memory,
+    input_messages_key="messages",
+    history_messages_key="messages",
+)
 
 user_input = st.text_input("You:", placeholder="What’s the point of anything, Marvin?")
+ask_button = st.button("🔄 Ask Marvin")
 
-if user_input:
-    st.session_state.chat_history.append(HumanMessage(content=user_input))
-    
-    response = model.invoke([system_msg] + st.session_state.chat_history)
+# Chat log oluşturulmadıysa başlat
+if "chat_log" not in st.session_state:
+    st.session_state.chat_log = []
 
-    st.session_state.chat_history.append(response)
+# Marvin'e sor
+if ask_button and user_input:
+    response = chain.invoke(
+        {"messages": [HumanMessage(content=user_input)]},
+        config={"configurable": {"session_id": "marvin-session"}},
+    )
+    st.session_state.chat_log.append(("You", user_input))
+    st.session_state.chat_log.append(("Marvin", response.content))
 
-
-if st.session_state.chat_history:
-    st.markdown("---")
-    st.subheader("📜 Conversation with Marvin")
-    for msg in st.session_state.chat_history:
-        role = "You" if isinstance(msg, HumanMessage) else "Marvin"
-        st.markdown(f"**{role}:** {msg.content}")
+# Sohbet geçmişini aşağıda göster
+if st.session_state.chat_log:
+    with st.container():
+        st.markdown("---")
+        st.subheader("📜 Conversation with Marvin")
+        for role, message in st.session_state.chat_log:
+            st.markdown(f"**{role}:** {message}")
+        # ⬇️ Otomatik olarak en alt satıra odaklanmak için boş kutu ekliyoruz
+        st.markdown("<div style='height: 1px;' id='bottom'></div>", unsafe_allow_html=True)
+        st.markdown(
+            "<script>document.getElementById('bottom').scrollIntoView({ behavior: 'smooth' });</script>",
+            unsafe_allow_html=True
+        )
